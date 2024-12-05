@@ -72,10 +72,6 @@ foam.CLASS({
       return await this.outputter.returnTable(X, dao.of, propertyNamesToQuery, sink.projection, propNames.length, this.addUnits);
     },
 
-    function getPropNamesToQuery(dao, propToColumnMapping) {
-      return this.columnHandler.returnPropNamesToQuery(propToColumnMapping);
-    },
-
     function getPropName(X, of) {
       var propNames = X.filteredTableColumns ? X.filteredTableColumns : this.outputter.getAllPropertyNames(of);
       return this.columnConfigToPropertyConverter.filterExportedProps(of, propNames);
