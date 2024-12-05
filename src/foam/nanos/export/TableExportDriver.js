@@ -64,9 +64,10 @@ foam.CLASS({
       let projectionSafe = ! propToColumnMapping.some(p => ! p.property.projectionSafe );
       var expr = ( foam.nanos.column.ExpressionForArrayOfNestedPropertiesBuilder.create() ).buildProjectionForPropertyNamesArray(dao.of, propertyNamesToQuery, projectionSafe);
       var sink = await dao.select(expr);
-      if (sink.exprs.length < propertyNamesToQuery.length) {
-        // re-populate propNamesToQuery to remove properties that cannot be queried (e.g., properties in many-to-one relationships)
-        propToColumnMapping  = this.columnConfigToPropertyConverter.returnPropertyColumnMappings(dao.of, sink.exprs.map(e => e.name));
+      if (sink.exprs.length !== propertyNamesToQuery.length) {
+        // re-populate propNamesToQuery to match result in sink (e.g., remove property names in many-to-one relationships)
+        propNames = sink.exprs.map(e => e.name);
+        propToColumnMapping  = this.columnConfigToPropertyConverter.returnPropertyColumnMappings(dao.of, propNames);
         propertyNamesToQuery = this.columnHandler.returnPropNamesToQuery(propToColumnMapping);
       }
       return await this.outputter.returnTable(X, dao.of, propertyNamesToQuery, sink.projection, propNames.length, this.addUnits);
