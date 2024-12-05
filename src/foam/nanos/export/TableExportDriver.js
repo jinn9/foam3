@@ -59,12 +59,21 @@ foam.CLASS({
     },
 
     async function exportDAOAndReturnTable(X, dao, propNames) {
-      var propToColumnMapping  = this.columnConfigToPropertyConverter.returnPropertyColumnMappings(dao.of, propNames);
-      var propertyNamesToQuery = this.columnHandler.returnPropNamesToQuery(propToColumnMapping);
+      let propToColumnMapping  = this.columnConfigToPropertyConverter.returnPropertyColumnMappings(dao.of, propNames);
+      let propertyNamesToQuery = this.columnHandler.returnPropNamesToQuery(propToColumnMapping);
       let projectionSafe = ! propToColumnMapping.some(p => ! p.property.projectionSafe );
       var expr = ( foam.nanos.column.ExpressionForArrayOfNestedPropertiesBuilder.create() ).buildProjectionForPropertyNamesArray(dao.of, propertyNamesToQuery, projectionSafe);
       var sink = await dao.select(expr);
+      if (sink.exprs.length < propertyNamesToQuery.length) {
+        // re-populate propNamesToQuery to remove properties that cannot be queried (e.g., properties in many-to-one relationthips)
+        propToColumnMapping  = this.columnConfigToPropertyConverter.returnPropertyColumnMappings(dao.of, sink.exprs.map(e => e.name));
+        propertyNamesToQuery = this.columnHandler.returnPropNamesToQuery(propToColumnMapping);
+      }
       return await this.outputter.returnTable(X, dao.of, propertyNamesToQuery, sink.projection, propNames.length, this.addUnits);
+    },
+
+    function getPropNamesToQuery(dao, propToColumnMapping) {
+      return this.columnHandler.returnPropNamesToQuery(propToColumnMapping);
     },
 
     function getPropName(X, of) {
